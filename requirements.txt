@@ -1,4 +1,4 @@
-python-telegram-bot==20.8
-moviepy==1.0.3
+python-telegram-bot
+moviepy
 yt-dlp
-httpx
+ffmpeg-python
