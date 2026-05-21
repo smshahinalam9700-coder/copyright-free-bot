@@ -9,7 +9,6 @@ from telegram import Update
 from telegram.ext import Application, MessageHandler, filters, ContextTypes
 from moviepy.editor import VideoFileClip, vfx, concatenate_videoclips
 
-# হেলথ চেক সিস্টেম
 class HealthCheckServer(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -17,10 +16,11 @@ class HealthCheckServer(BaseHTTPRequestHandler):
         self.wfile.write(b"Bot is running")
 
 def run_health_server():
-    server = HTTPServer(('0.0.0.0', int(os.environ.get('PORT', 8080))), HealthCheckServer)
+    port = int(os.environ.get('PORT', 8080))
+    server = HTTPServer(('0.0.0.0', port), HealthCheckServer)
     server.serve_forever()
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logging.basicConfig(level=logging.INFO)
 TOKEN = os.environ.get("BOT_TOKEN")
 
 def download_video(url, download_path):
@@ -29,13 +29,14 @@ def download_video(url, download_path):
         ydl.download([url])
 
 def edit_copyright_free(input_path, output_path):
-    with VideoFileClip(input_path) as clip:
-        edited = clip.fx(vfx.mirror_x).fx(vfx.lum_contrast, lum=2)
-        duration = int(edited.duration)
-        subclips = [edited.subclip(i, min(i+5, duration)) for i in range(0, duration, 5)]
-        final_clip = concatenate_videoclips(subclips).fx(vfx.speedx, 1.02)
-        final_clip.write_videofile(output_path, codec="libx264", audio_codec="aac", logger=None)
-        final_clip.close()
+    clip = VideoFileClip(input_path)
+    edited = clip.fx(vfx.mirror_x).fx(vfx.lum_contrast, lum=2)
+    duration = int(edited.duration)
+    subclips = [edited.subclip(i, min(i+5, duration)) for i in range(0, duration, 5)]
+    final_clip = concatenate_videoclips(subclips).fx(vfx.speedx, 1.02)
+    final_clip.write_videofile(output_path, codec="libx264", audio_codec="aac", logger=None)
+    clip.close()
+    final_clip.close()
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = update.message
@@ -56,6 +57,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 if __name__ == '__main__':
     threading.Thread(target=run_health_server, daemon=True).start()
-    application = Application.builder().token(TOKEN).build()
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    application.run_polling()
+    app = Application.builder().token(TOKEN).build()
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    app.run_polling()
