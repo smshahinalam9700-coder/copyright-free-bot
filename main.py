@@ -1,4 +1,6 @@
 import os
+os.environ["PATH"] += os.pathsep + "/usr/bin"
+import os
 import subprocess
 import yt_dlp
 from pyrogram import Client, filters
