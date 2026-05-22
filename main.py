@@ -4,22 +4,23 @@ from pyrogram import Client, filters
 # এনভায়রনমেন্ট থেকে টোকেন নিচ্ছে (নিরাপদ পদ্ধতি)
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-# যদি টোকেন সেট করা না থাকে, তবে বট চালু হবে না
-if not BOT_TOKEN:
-    raise ValueError("Error: BOT_TOKEN এনভায়রনমেন্ট ভেরিয়েবলে পাওয়া যায়নি!")
+# আপনার সংগৃহীত API ID এবং API HASH নিচে বসান
+API_ID = 28659551
+API_HASH = "80f121d51a65526e0b7849e830e9d40b"
 
-# বট ক্লায়েন্ট (এখানে API_ID এবং API_HASH প্রয়োজন)
-# এগুলো my.telegram.org থেকে পাবেন
+# বট ক্লায়েন্ট তৈরি
 app = Client(
     "my_bot",
     bot_token=BOT_TOKEN,
-    api_id=1234567,            # আপনার নিজস্ব API ID দিন
-    api_hash="your_api_hash"   # আপনার নিজস্ব API Hash দিন
+    api_id=API_ID,
+    api_hash=API_HASH
 )
 
+# /start কমান্ডের জন্য রেসপন্স
 @app.on_message(filters.command("start"))
 async def start(client, message):
     await message.reply_text("হ্যালো! বটটি সফলভাবে সচল হয়েছে।")
 
+# বট রান করা
 print("বট সচল হচ্ছে...")
 app.run()
