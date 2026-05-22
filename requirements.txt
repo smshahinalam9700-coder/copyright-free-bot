@@ -1,4 +1,4 @@
-python-telegram-bot
-moviepy
+pyrogram
+tgcrypto
 yt-dlp
-httpx
+moviepy
