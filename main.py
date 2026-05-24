@@ -20,4 +20,19 @@ async def handle_video(client, message):
     
     try:
         # ভিডিও ডাউনলোড
-        ydl_opts = {'format': 'best', 'outtmpl
+        ydl_opts = {'format': 'best', 'outtmpl': 'input.mp4'}
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+        
+        # FFmpeg এডিটিং কমান্ড
+        subprocess.run(["ffmpeg", "-i", "input.mp4", "-vf", "hflip,crop=iw-50:ih-50:25:25", "-c:a", "copy", "-y", "final.mp4"], check=True)
+        
+        await message.reply_video("final.mp4", caption="✅ ভিডিও প্রস্তুত!")
+    except Exception as e:
+        await message.reply_text(f"❌ এরর: {e}")
+    finally:
+        # ফাইল ডিলিট করে দেওয়া
+        if os.path.exists("input.mp4"): os.remove("input.mp4")
+        if os.path.exists("final.mp4"): os.remove("final.mp4")
+
+app.run()
