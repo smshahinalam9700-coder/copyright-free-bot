@@ -1,1 +1,0 @@
-# copyright-free-bot
