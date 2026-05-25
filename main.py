@@ -1,56 +1,53 @@
+import logging
 import os
 import yt_dlp
-import logging
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
-# লগিং সেটআপ
-logging.basicConfig(level=logging.INFO)
+# আপনার টোকেনটি এখানে বসান
+TOKEN = '8966044636:AAEcEF3PvmWd23X-0WZpENpWxlKD8TqF1iw'
 
-# আপনার বটের টোকেন (নিরাপত্তার জন্য এনভায়রনমেন্ট ভেরিয়েবল ব্যবহার করা উত্তম)
-TOKEN = 'YOUR_NEW_TOKEN_HERE' 
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-def process_video(update, context):
+def start(update: Update, context: CallbackContext):
+    update.message.reply_text('বট প্রস্তুত! ভিডিও লিঙ্ক পাঠান।')
+
+def process_video(update: Update, context: CallbackContext):
     url = update.message.text
-    update.message.reply_text("ডাউনলোড ও এডিটিং শুরু হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...")
+    update.message.reply_text("ডাউনলোড শুরু হচ্ছে...")
     
-    # দ্রুত ডাউনলোডের জন্য অপশন
-    ydl_opts = {
-        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
-        'outtmpl': 'input.mp4'
-    }
+    # ইনপুট ফাইল এবং আউটপুট ফাইল ক্লিন রাখা
+    if os.path.exists('input.mp4'): os.remove('input.mp4')
+    if os.path.exists('output.mp4'): os.remove('output.mp4')
     
+    ydl_opts = {'format': 'best', 'outtmpl': 'input.mp4'}
     try:
-        # ডাউনলোড
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
-            
-        # শক্তিশালী এডিটিং কমান্ড (দ্রুত ও কপিরাইট ফ্রি)
-        # হরাইজন্টাল ফ্লিপ, সামান্য জুম, অডিও পিচ পরিবর্তন এবং মেটাডাটা ক্লিনিং
-        cmd = (
-            'ffmpeg -i input.mp4 -vf "hflip,zoompan=z=1.05:d=1" '
-            '-af "asetrate=44100*1.05,atempo=1/1.05" '
-            '-preset ultrafast -c:v libx264 -crf 23 -c:a aac output.mp4 -y'
-        )
+        
+        update.message.reply_text("এডিটিং চলছে, একটু অপেক্ষা করুন...")
+        
+        # দ্রুত এডিটিং কমান্ড (সিস্টেম ক্র্যাশ এড়াতে অপ্টিমাইজড)
+        cmd = 'ffmpeg -i input.mp4 -vf "hflip,zoompan=z=1.05:d=1" -af "asetrate=44100*1.05" -preset ultrafast output.mp4 -y'
         os.system(cmd)
         
-        # ফাইল পাঠানো
         if os.path.exists('output.mp4'):
             context.bot.send_video(chat_id=update.effective_chat.id, video=open('output.mp4', 'rb'))
         else:
-            update.message.reply_text("এডিটিং সম্পন্ন হতে ব্যর্থ হয়েছে।")
+            update.message.reply_text("এডিটিং ব্যর্থ হয়েছে।")
             
     except Exception as e:
-        update.message.reply_text(f"একটি সমস্যা হয়েছে: {str(e)}")
+        update.message.reply_text(f"ত্রুটি: {str(e)}")
     
-    # ফাইল ক্লিনআপ
-    for f in ['input.mp4', 'output.mp4']:
-        if os.path.exists(f):
-            os.remove(f)
+    # সবশেষে ফাইল ডিলিট
+    if os.path.exists('input.mp4'): os.remove('input.mp4')
+    if os.path.exists('output.mp4'): os.remove('output.mp4')
 
-# বট শুরু
+# বট রান করা
 updater = Updater(TOKEN, use_context=True)
-updater.dispatcher.add_handler(CommandHandler('start', lambda u, c: u.message.reply_text('ভিডিও লিঙ্ক পাঠান')))
+updater.dispatcher.add_handler(CommandHandler('start', start))
 updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, process_video))
 
+# পোলিং স্টার্ট
 updater.start_polling()
 updater.idle()
