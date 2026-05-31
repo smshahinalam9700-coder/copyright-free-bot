@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS # এটি যোগ করুন
+from flask_cors import CORS
 import yt_dlp
 
 app = Flask(__name__)
-CORS(app) # এটি যোগ করুন
+CORS(app)
 
 @app.route('/download', methods=['GET'])
 def download():
@@ -15,7 +15,10 @@ def download():
         ydl_opts = {'format': 'best'}
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(video_url, download=False)
-            return jsonify({"url": info['url'], "title": info.get('title')})
+            return jsonify({
+                "url": info.get('url'), 
+                "title": info.get('title')
+            })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
